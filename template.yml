@@ -52,13 +52,7 @@ Resources:
             RestApiId: !Ref AdditionApi
             Path: /add
             Method: post
-        AdditionApiGet:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AdditionApi
-            Path: /add
-            Method: get
-
+      
   # API Gateway
   AdditionApi:
     Type: AWS::Serverless::Api
@@ -99,70 +93,14 @@ Resources:
                       num2: 3
               responses:
                 '200':
-                  description: Successful addition
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          num1:
-                            type: number
-                          num2:
-                            type: number
-                          result:
-                            type: number
-                          operation:
-                            type: string
-                          message:
-                            type: string
-                '400':
-                  description: Bad request
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          error:
-                            type: string
-                          message:
-                            type: string
-              x-amazon-apigateway-integration:
-                type: aws_proxy
-                httpMethod: POST
-                uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdditionFunction.Arn}/invocations'
-            get:
-              summary: Add two numbers via query parameters
-              parameters:
-                - name: num1
-                  in: query
-                  required: true
-                  schema:
-                    type: number
-                  description: First number
-                - name: num2
-                  in: query
-                  required: true
-                  schema:
-                    type: number
-                  description: Second number
-              responses:
-                '200':
-                  description: Successful addition
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          num1:
-                            type: number
-                          num2:
-                            type: number
-                          result:
-                            type: number
-                          operation:
-                            type: string
-                          message:
-                            type: string
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
               x-amazon-apigateway-integration:
                 type: aws_proxy
                 httpMethod: POST
@@ -188,10 +126,10 @@ Resources:
                   application/json: '{"statusCode": 200}'
                 responses:
                   default:
-                    statusCode: '200'
+                    statusCode: 200
                     responseParameters:
                       method.response.header.Access-Control-Allow-Origin: "'*'"
-                      method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+                      method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
 
   # CloudWatch Log Group
