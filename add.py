@@ -14,5 +14,5 @@ def lambda_handler(event, context):
         'body': json.dumps({
             'message': 'Addition completed',
             'result': add_value
-        })
+        }) 
     }
