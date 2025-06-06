@@ -39,7 +39,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${ResourcePrefix}-${Environment}-addition-function'
-      CodeUri: .
+      CodeUri: src/
       Handler: add.lambda_handler
       Description: Lambda function to perform addition of two numbers
       Tags:
