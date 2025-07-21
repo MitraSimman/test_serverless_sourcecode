@@ -6,11 +6,16 @@ phases:
       python: 3.9
   build:
     commands:
-      - mkdir package
-      - cp lambda_function.py package/
-      - cd package && zip function.zip lambda_function.py && cd ..
-      - mv package/function.zip .
+      - echo "Installing SAM CLI"
+      - pip install aws-sam-cli
+      - echo "SAM CLI installed"
+      - echo "Current directory:" && pwd
+      - ls -al
+      - sam build -t template.yml
+      - echo "Pipeline bucket name $ArtifactBucket"
+      - sam package --s3-bucket $ArtifactBucket --output-template-file packaged.yaml
+
 artifacts:
   files:
-    - template.yaml
-    - function.zip
+    - packaged.yaml
+
