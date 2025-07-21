@@ -5,18 +5,10 @@ Description: Simple Addition Lambda Function with API Gateway
 Parameters:
   Environment:
     Type: String
-    Description: Environment name
-    Default: dev
-    AllowedValues:
-      - dev
-      - staging
-      - prod
-  
+    
   ResourcePrefix:
     Type: String
-    Description: Prefix for all resources
-    Default: addition-app
-
+    
 Globals:
   Function:
     Timeout: 30
@@ -27,133 +19,75 @@ Globals:
         ENVIRONMENT: !Ref Environment
         LOG_LEVEL: INFO
   
-  Api:
-    Cors:
-      AllowMethods: "'POST, GET, OPTIONS'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-      AllowOrigin: "'*'"
-
 Resources:
   # Lambda Function
   AdditionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub '${ResourcePrefix}-${Environment}-addition-function'
+      FunctionName: !Sub '${Environment}-addition-function'
       CodeUri: src/
       Handler: add.lambda_handler
-      Description: Lambda function to perform addition of two numbers
+      Timeout: 480
+      Role: !GetAtt LambdaExecutionRole.Arn
       Tags:
         Environment: !Ref Environment
         Application: !Ref ResourcePrefix
-      Events:
-        AdditionApi:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AdditionApi
-            Path: /add
-            Method: post
-      
+            
   # API Gateway
-  AdditionApi:
+  ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      Name: !Sub '${ResourcePrefix}-${Environment}-api'
-      StageName: !Ref Environment
-      Description: API Gateway for Addition Lambda Function
-      Tags:
-        Environment: !Ref Environment
-        Application: !Ref ResourcePrefix
+      StageName: !Sub dev
+      Cors: "'*'"
+      EndpointConfiguration:
+        Type: REGIONAL
       DefinitionBody:
-        openapi: '3.0.1'
+        swagger: "2.0"
         info:
-          title: Addition API
-          version: '1.0'
+          title: !Sub ${Environment}-backend-api
+        produces:
+          - application/json
+          - application/javascript
+          - text/html; charset=utf-8
+          - text/css
         paths:
-          /add:
+          /usercreate:
             post:
-              summary: Add two numbers
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        num1:
-                          type: number
-                          description: First number
-                        num2:
-                          type: number
-                          description: Second number
-                      required:
-                        - num1
-                        - num2
-                    example:
-                      num1: 5
-                      num2: 3
-              responses:
-                '200':
-                  description: 200 response
-                  headers:
-                    Access-Control-Allow-Origin:
-                      type: string
-                    Access-Control-Allow-Methods:
-                      type: string
-                    Access-Control-Allow-Headers:
-                      type: string
+              summary: User Signup API
+              description: User Signup API
+              produces:
+                - application/json
+              responses: {}
+              security:
+                - api_key: []
+                # - Cognito_Auth: []
               x-amazon-apigateway-integration:
-                type: aws_proxy
-                httpMethod: POST
-                uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdditionFunction.Arn}/invocations'
+                httpMethod: "POST"
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdditionFunction.Arn}/invocations"
+                passthroughBehavior: "when_no_match"
+                type: "aws_proxy"
             options:
-              summary: CORS preflight
+              consumes:
+                - "application/json"
               responses:
-                '200':
-                  description: CORS headers
+                "200":
+                  description: "200 response"
                   headers:
                     Access-Control-Allow-Origin:
-                      schema:
-                        type: string
+                      type: "string"
                     Access-Control-Allow-Methods:
-                      schema:
-                        type: string
+                      type: "string"
                     Access-Control-Allow-Headers:
-                      schema:
-                        type: string
+                      type: "string"
               x-amazon-apigateway-integration:
-                type: mock
-                requestTemplates:
-                  application/json: '{"statusCode": 200}'
                 responses:
                   default:
-                    statusCode: 200
+                    statusCode: "200"
                     responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
                       method.response.header.Access-Control-Allow-Origin: "'*'"
-                      method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
-                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-
-  # CloudWatch Log Group
-  AdditionFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub '/aws/lambda/${ResourcePrefix}-${Environment}-addition-function'
-      RetentionInDays: 14
-
-Outputs:
-  AdditionFunctionArn:
-    Description: Addition Lambda Function ARN
-    Value: !GetAtt AdditionFunction.Arn
-    Export:
-      Name: !Sub '${ResourcePrefix}-${Environment}-AdditionFunctionArn'
-
-  AdditionApiUrl:
-    Description: API Gateway endpoint URL
-    Value: !Sub 'https://${AdditionApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/add'
-    Export:
-      Name: !Sub '${ResourcePrefix}-${Environment}-AdditionApiUrl'
-
-  AdditionApiId:
-    Description: API Gateway ID
-    Value: !Ref AdditionApi
-    Export:
-      Name: !Sub '${ResourcePrefix}-${Environment}-AdditionApiId'
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                passthroughBehavior: "when_no_match"
+                type: "mock"

@@ -1,8 +1,16 @@
-def add_numbers(a, b):
-    return a + b
+import json
 
-if __name__ == "__main__":
-    num1 = float(input("Enter first number: "))
-    num2 = float(input("Enter second number: "))
-    result = add_numbers(num1, num2)
-    print(f"The sum of {num1} and {num2} is {result}")
+def lambda_handler(event, context):
+    # Simple addition program
+    add_value = print(10 + 15)
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps({
+            'message': 'Addition completed',
+            'result': add_value
+        }) 
+    }
