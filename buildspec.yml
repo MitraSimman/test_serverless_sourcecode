@@ -12,8 +12,8 @@ phases:
       - echo "Current directory:" && pwd
       - ls -al
       - sam build -t template.yml
-      - echo "Pipeline bucket name $S3BucketName"
-      - sam package --s3-bucket $S3BucketName --output-template-file packaged.yaml
+      - echo "Pipeline bucket name $PIPELINE_BUCKET"
+      - sam package --s3-bucket $PIPELINE_BUCKET --output-template-file packaged.yaml
 
 artifacts:
   files:
