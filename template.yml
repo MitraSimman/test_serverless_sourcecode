@@ -20,7 +20,7 @@ Globals:
         LOG_LEVEL: INFO
   
 Resources:
-  # Lambda Function
+  # Lambda Function (SAM will create execution role automatically)
   AdditionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -28,16 +28,25 @@ Resources:
       CodeUri: src/
       Handler: add.lambda_handler
       Timeout: 480
-      Role: !GetAtt LambdaExecutionRole.Arn
+      # Remove Role and use Policies instead - SAM will create the role
+      Policies:
+        - AWSLambdaBasicExecutionRole
       Tags:
         Environment: !Ref Environment
         Application: !Ref ResourcePrefix
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /usercreate
+            Method: post
             
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: !Sub dev
+      StageName: dev
       Cors: "'*'"
       EndpointConfiguration:
         Type: REGIONAL
@@ -60,7 +69,6 @@ Resources:
               responses: {}
               security:
                 - api_key: []
-                # - Cognito_Auth: []
               x-amazon-apigateway-integration:
                 httpMethod: "POST"
                 uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdditionFunction.Arn}/invocations"
@@ -91,3 +99,8 @@ Resources:
                   application/json: '{"statusCode": 200}'
                 passthroughBehavior: "when_no_match"
                 type: "mock"
+
+Outputs:
+  ApiGatewayEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/dev'
